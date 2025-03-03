@@ -7,8 +7,6 @@ namespace WinFormsApp1
             InitializeComponent();
         }
 
-        
-
         private void superButton_Click(object sender, EventArgs e)
         {
             MessageBox.Show("Я супермегакнопка, і цього мене не позбавиш!");
@@ -16,7 +14,7 @@ namespace WinFormsApp1
 
         private void transparency_Click(object sender, EventArgs e)
         {
-            Opacity = 1.5 - Opacity;
+            Opacity = 1.2 - Opacity;
         }
 
         private void color_Click(object sender, EventArgs e)
@@ -29,7 +27,7 @@ namespace WinFormsApp1
 
         private void helloWorld_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("hello Home. World заблокований з міркувань карантину");
+            MessageBox.Show("hello world. Карантин закінчився - world розблокувався");
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)

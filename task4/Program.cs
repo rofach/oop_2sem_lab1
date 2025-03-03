@@ -18,7 +18,7 @@ namespace _2a
             Console.WriteLine("0 -- sqrt(abs(x))");
             Console.WriteLine("1 -- x^3");
             Console.WriteLine("2 -- x + 3,5");
-            DlgFunc[] funcArray = 
+            DlgFunc[] dlgArr = 
             {
             x => Math.Sqrt(Math.Abs(x)),
             x => Math.Pow(x, 3.0),
@@ -30,7 +30,7 @@ namespace _2a
                 try
                 {
                     string[] input = Console.ReadLine().Trim().Split();
-                    Console.WriteLine(funcArray[int.Parse(input[0])](double.Parse(input[1])));
+                    Console.WriteLine(dlgArr[int.Parse(input[0])](double.Parse(input[1])));
                 }
                 catch (Exception ex)
                 {
