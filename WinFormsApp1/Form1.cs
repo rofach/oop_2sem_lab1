@@ -14,7 +14,9 @@ namespace WinFormsApp1
 
         private void transparency_Click(object sender, EventArgs e)
         {
-            Opacity = 1.2 - Opacity;
+            if (Opacity == 0.5)
+                Opacity = 1;
+            else Opacity = 0.5;
         }
 
         private void color_Click(object sender, EventArgs e)
