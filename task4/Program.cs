@@ -18,7 +18,7 @@ namespace _2a
             Console.WriteLine("0 -- sqrt(abs(x))");
             Console.WriteLine("1 -- x^3");
             Console.WriteLine("2 -- x + 3,5");
-            DlgFunc[] dlgArr = 
+            Func<double, double>[] dlgArr = 
             {
             x => Math.Sqrt(Math.Abs(x)),
             x => Math.Pow(x, 3.0),

@@ -6,11 +6,11 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 
 namespace SortingVerificationSystem
 {
-    delegate void SortArr(ref double[] arr);
     class Program
     {
         static void Main()
@@ -25,9 +25,11 @@ namespace SortingVerificationSystem
                 double[] array = LoadArrayFromFile(file);
                 //Console.WriteLine(string.Join(" ", array));
                 Console.WriteLine(Path.GetFileName(file));
-                Console.WriteLine("Shaker sort\t" + TestSortRes(array, ShakerSort, StudentShakerSort, out tempScore));
+                Console.WriteLine("Shaker sort\t");
+                TestSortRes(array, ShakerSort, StudentShakerSort, out tempScore); ;
                 score += tempScore;
-                Console.WriteLine("Selection sort\t" + TestSortRes(array, SelectionSort, StudentSelectionSort, out tempScore));
+                Console.WriteLine("Selection sort\t");
+                TestSortRes(array, SelectionSort, StudentSelectionSort, out tempScore);
                 score += tempScore;
                 Console.WriteLine("---------------------");
             }
@@ -44,6 +46,7 @@ namespace SortingVerificationSystem
             CreateArrFile("TestArrays/reversed2.txt", () => CreateReversedArray(20000));
             CreateArrFile("TestArrays/sorted.txt", () => CreateSortedArray(20000));
             CreateArrFile("TestArrays/sorted2.txt", () => CreateSortedArray(20000));
+            CreateArrFile("TestArrays/sorted2.txt", () => CreateNearlySortedArray(20000));
         }
         static void CreateArrFile(string filePath, Func<double[]> generator)
         {
@@ -95,47 +98,66 @@ namespace SortingVerificationSystem
             return array;
         }
 
-    static double[] LoadArrayFromFile(string filePath)
+        static double[] LoadArrayFromFile(string filePath)
         {
             return Array.ConvertAll(File.ReadAllText(filePath).Split().ToArray(), double.Parse);
+            
         }
 
-        static string TestSortRes(double[] arr, SortArr ReferenceSort, SortArr StudentSort, out int score)
+        static void TestSortRes(double[] arr, Action<double[]> ReferenceSort, Action<double[]> StudentSort, out int score)
         {
+
             double[] refSortArr = (double[])arr.Clone();
             double[] studSortArr = (double[])arr.Clone();
             int timeRefSort = 0;
             int timeStudSort = 0;
-
+            //student sort
             try
             {                
-                timeStudSort = MeasureSortTime(StudentSort, ref studSortArr);      
+                timeStudSort = MeasureSortTime(StudentSort, studSortArr, out bool canceled);
+                if (canceled)
+                    throw new TimeoutException();
+            
+            }
+            catch (TimeoutException)
+            {
+                Console.WriteLine("Timeout");
+                score = 5;
             }
             catch {
                 score = 0;
-                return "Runtime error (problem with student sort)";
+                Console.WriteLine("Runtime error");
                 
             }
+
+            //server
             try
             {
-                timeRefSort = MeasureSortTime(ReferenceSort, ref refSortArr);
+                timeRefSort = MeasureSortTime(ReferenceSort, refSortArr, out bool canceled);
+                if (canceled)
+                    throw new TimeoutException();
+            }
+            catch (TimeoutException)
+            {
+                Console.WriteLine("Timeout (server problem)");
+                score = 5;
             }
             catch {
                 score = 0;
-                return "Runtime error (server problem)";
+                Console.WriteLine( "Runtime error (server problem)");
             }
-            if (CompareTimes(timeRefSort, timeStudSort) && CompareArr(ref refSortArr, ref studSortArr))
+            if (CompareTimes(timeRefSort, timeStudSort) && CompareArr(refSortArr, studSortArr))
             {
                 score = 10;
-                return "Passed";
+                Console.WriteLine("Passed");
             }
             else
             {
                 score = 0;
-                return "Failed";
+                Console.WriteLine("Failed");
             }
         }
-        static bool CompareArr(ref double[] arr1, ref double[] arr2)
+        static bool CompareArr(double[] arr1, double[] arr2)
         {
             if(arr1.Length != arr2.Length) return false;
             for (int i = 0; i < arr1.Length; i++)
@@ -144,10 +166,22 @@ namespace SortingVerificationSystem
             }
             return true;
         }
-        static int MeasureSortTime(SortArr sort, ref double[] arr)
+        static int MeasureSortTime(Action<double[]> sort, double[] arr, out bool canceled)
         {
+            CancellationTokenSource cancelTokenSource = new CancellationTokenSource(5000);
+            CancellationToken token = cancelTokenSource.Token;
+            var task = Task.Run(() => sort.Invoke(arr), token);
             Stopwatch stopwatch = Stopwatch.StartNew();
-            sort.Invoke(ref arr);
+            try
+            {
+                task.Wait(token);
+                canceled = false;
+            }
+            catch (OperationCanceledException)
+            {
+                canceled = true;
+            }
+            //sort.Invoke(arr);
             stopwatch.Stop();
             return stopwatch.Elapsed.Milliseconds;
         }
@@ -156,8 +190,9 @@ namespace SortingVerificationSystem
         {
             return Math.Max(0, teta / 5) <= tstud && tstud <= 5 * teta;
         }
-        static void SelectionSort(ref double[] array)
+        static void SelectionSort(double[] array)
         {
+            
             for (int i = 0; i < array.Length - 1; i++)
             {
                 int minIndex = i;
@@ -170,7 +205,7 @@ namespace SortingVerificationSystem
             }
         }
 
-        static void ShakerSort(ref double[] array)
+        static void ShakerSort(double[] array)
         {
             bool swapped = true;
             int start = 0;
@@ -208,7 +243,7 @@ namespace SortingVerificationSystem
             }
         }
 
-        static void StudentSelectionSort(ref double[] array)
+        static void StudentSelectionSort(double[] array)
         {
             for (int i = 0; i < array.Length - 1; i++)
             {
@@ -223,7 +258,7 @@ namespace SortingVerificationSystem
             }
         }
 
-        static void StudentShakerSort(ref double[] array)
+        static void StudentShakerSort(double[] array)
         {
             //bool swapped;
             //do
@@ -238,6 +273,8 @@ namespace SortingVerificationSystem
             //        }
             //    }
             //} while (swapped);
+            //Array.Sort(array);
+
             //Array.Sort(array);
             bool swapped = true;
             int start = 0;
@@ -272,9 +309,9 @@ namespace SortingVerificationSystem
                 }
 
                 start = start + 1;
+
             }
 
-
-        }
+            }
     }
 }
